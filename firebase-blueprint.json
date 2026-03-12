@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "Article": {
+      "title": "Article",
+      "description": "A knowledge management article for telecom advisors.",
+      "type": "object",
+      "properties": {
+        "articleNumber": {
+          "type": "string",
+          "description": "Unique identifier for the article."
+        },
+        "articleName": {
+          "type": "string",
+          "description": "The title of the article."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category the article belongs to.",
+          "enum": [
+            "Voice Call Service",
+            "eSIM Related Issue",
+            "SKYC Related Issue",
+            "Internet Related Issue",
+            "SMS Related Issue"
+          ]
+        },
+        "vocKeywords": {
+          "type": "string",
+          "description": "Voice of Customer keywords for search."
+        },
+        "hindiKeywords": {
+          "type": "string",
+          "description": "Keywords in Hindi for search."
+        },
+        "description": {
+          "type": "string",
+          "description": "The full content of the article."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "articleNumber",
+        "articleName",
+        "category",
+        "description"
+      ]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile with role management.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "user"]
+        }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/articles/{articleId}": {
+      "schema": "Article",
+      "description": "Collection of KM articles."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and roles."
+    }
+  }
+}

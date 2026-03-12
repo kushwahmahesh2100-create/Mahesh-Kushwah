@@ -1,0 +1,99 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: articles
+    // Fields:
+    //   - articleNumber: string (required)
+    //   - articleName: string (required)
+    //   - category: string (required, enum)
+    //   - vocKeywords: string (optional)
+    //   - hindiKeywords: string (optional)
+    //   - description: string (required)
+    //   - createdAt: timestamp (required)
+    //   - updatedAt: timestamp (required)
+    //
+    // Collection: users
+    // Fields:
+    //   - email: string (required)
+    //   - role: string (required, enum: ['admin', 'user'])
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "kushwahmahesh2100@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidArticle(data) {
+      let allowedCategories = [
+        "Voice Call Service",
+        "eSIM Related Issue",
+        "SKYC Related Issue",
+        "Internet Related Issue",
+        "SMS Related Issue"
+      ];
+      return data.keys().hasAll(['articleNumber', 'articleName', 'category', 'description', 'createdAt', 'updatedAt']) &&
+             data.articleNumber is string && data.articleNumber.size() > 0 && data.articleNumber.size() < 50 &&
+             data.articleName is string && data.articleName.size() > 0 && data.articleName.size() < 200 &&
+             data.category in allowedCategories &&
+             data.description is string && data.description.size() > 0 && data.description.size() < 10000 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'role']) &&
+             data.email is string &&
+             data.role in ['admin', 'user'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /articles/{articleId} {
+      // Anyone authenticated can read articles
+      allow read: if isAuthenticated();
+      // Only admins can create/update/delete
+      allow create: if isAdmin() && isValidArticle(request.resource.data);
+      allow update: if isAdmin() && isValidArticle(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Admins can read any profile
+      allow read: if isAdmin();
+      
+      // Users can create their own profile as 'user' role by default
+      // Admins can create any profile
+      allow create: if isAuthenticated() && 
+                    isValidUser(request.resource.data) && 
+                    (
+                      (request.auth.uid == userId && request.resource.data.role == 'user') ||
+                      isAdmin()
+                    );
+      
+      // Only admins can update roles
+      allow update: if isAdmin() && isValidUser(request.resource.data);
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

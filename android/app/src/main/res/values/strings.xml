@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mahesh KM</string>
+    <string name="title_activity_main">Mahesh KM</string>
+    <string name="package_name">com.mahesh.km</string>
+    <string name="custom_url_scheme">com.mahesh.km</string>
+</resources>
